@@ -1,0 +1,9 @@
+# .air.toml
+[build]
+  cmd = "go build -o myapp ."
+  bin = "myapp"
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  exclude_dir = ["assets", "tmp", "vendor"]
+
+[log]
+  time = true

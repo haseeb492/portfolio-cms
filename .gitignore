@@ -1,0 +1,33 @@
+
+# Binaries and build output
+/myapp
+/bin/
+build/
+tmp/
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Vendor directory (if using vendoring)
+vendor/
+
+# Environment files (sensitive, should not be committed)
+.env
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+
+# Docker-related
+docker-compose.override.yml
