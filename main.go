@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/haseeb492/portfolio-cms/models"
+	"github.com/haseeb492/portfolio-cms/seeders"
 )
 
 func main () {
@@ -33,14 +34,18 @@ func main () {
 	if err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
+ 
+	if err:= seeders.SeedAdminUser(db); err != nil {
+		log.Fatalf("Failed to seed admin User: %v", err) 
+	}
 
 	router := gin.Default()
-
+ 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message" : "Hello from portfolio CMS"})
-	})
+	}) 
 
-	log.Println("server is running on port: 8080")
+	log.Println("server is running on port: 808")	
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
