@@ -13,6 +13,16 @@ const (
 	RoleEditor UserRole = "editor"
 )
 
+var validRolesSet = map[UserRole]struct{}{
+	RoleAdmin:    {},
+	RoleEditor:   {},
+}
+
+func (r UserRole) IsValid() bool {
+	_, ok := validRolesSet[r]
+	return ok
+}
+
 type User struct {
 	ID           uint           `gorm:"primaryKey"`
 	CreatedAt    time.Time

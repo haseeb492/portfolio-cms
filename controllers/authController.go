@@ -23,6 +23,12 @@ type OTPRequest struct {
 	OTP   string `json:"otp" binding:"required"`
 }
 
+type AddUserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Name string `json:"name" binding:"required"`
+	Role string `json:"role" binding:"required"`
+}
+
 
 func Login(c *gin.Context)  {
 	var request LoginRequest
@@ -117,7 +123,7 @@ func Login(c *gin.Context)  {
 func SubmitOtp(c *gin.Context)  {
 	var request OTPRequest
 	if err:= c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error" : err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "Invalid request body"})
 		return
 	}
 
@@ -156,12 +162,75 @@ func SubmitOtp(c *gin.Context)  {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"message" : "Logged in successfully",
 		"token" : token,
 		"user" : user,
 		"isFirstTimeLogin" : false,
 	})
 }
 
-func SetPassword(c *gin.Context)  {
-	
+func AddUser(c *gin.Context)  {
+	var request AddUserRequest
+	if err:= c.ShouldBindJSON(&request); err!= nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "Invalid request body"})
+		return
+	}
+
+
+	dbInstance, exists := c.Get("db")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error" : "Internal server error"})
+		log.Fatalf("Database connection not established")
+		return
+	}
+
+	db := dbInstance.(*gorm.DB)
+
+	var user models.User
+	if err:= db.Where("email = ?", request.Email).First(&user).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "A user already exists with that email"})
+		return
+	}
+
+	role := models.UserRole(request.Role)
+	if !role.IsValid() {
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "Invalid role"})
+		return
+	}
+
+	newUser := models.User{
+		Email: request.Email,
+		Name: request.Name,
+		Role: role,
+		IsFirstTime: true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err:= db.Create(&newUser).Error; err!= nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error" : "Failed to create User"})
+		log.Fatalf("Error in add user controller: %v", err.Error())
+		return
+	}
+
+	otpCode := utils.GenerateOTP(8)
+	otpEntry := models.UserOTP{
+		UserID: newUser.ID,
+		OTPCode: otpCode,
+		OTPType: "first_time",
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+		Used: false,
+		CreatedAt: time.Now(),
+	}
+
+	if err:= db.Create(&otpEntry).Error; err!= nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error" : "Failed to create otp"})
+		log.Fatalf("Error in add user controller: %v", err.Error())
+		return
+	}
+	utils.SendOTPEmail(newUser.Email, otpCode)
+	c.JSON(http.StatusOK, gin.H{
+		"message" : "User added successfully and OTP sent to new user's email",
+		"user" : newUser,
+	})
 }
