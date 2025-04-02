@@ -23,10 +23,11 @@ type OTPRequest struct {
 	OTP   string `json:"otp" binding:"required"`
 }
 
+
 func Login(c *gin.Context)  {
 	var request LoginRequest
 	if err:= c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error" : err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "Invalid request format"})
 		return
 	}
 
@@ -159,4 +160,8 @@ func SubmitOtp(c *gin.Context)  {
 		"user" : user,
 		"isFirstTimeLogin" : false,
 	})
+}
+
+func SetPassword(c *gin.Context)  {
+	
 }
