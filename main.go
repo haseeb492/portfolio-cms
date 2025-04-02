@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/haseeb492/portfolio-cms/models"
+	"github.com/haseeb492/portfolio-cms/routes"
 	"github.com/haseeb492/portfolio-cms/seeders"
 )
 
@@ -40,12 +41,16 @@ func main () {
 	}
 
 	router := gin.Default()
- 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message" : "Hello from portfolio CMS"})
-	}) 
 
-	log.Println("server is running on port: 808")	
+	router.Use(func(c *gin.Context) {
+		c.Set("db", db)
+		c.Next()
+	})
+
+	routes.AuthRoutes(router)
+ 
+
+	log.Println("server is running on port: 8080")	
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
